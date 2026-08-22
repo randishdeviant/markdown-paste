@@ -1,49 +1,77 @@
-/* Mengimpor Tailwind CSS v4 dengan benar */
 @import "tailwindcss";
 
-/* Memuat plugin typography langsung dari CSS */
 @plugin "@tailwindcss/typography";
 
-
-/* Mendefinisikan semua kustomisasi tema di dalam blok @theme */
 @theme {
-  /* Definisikan warna kustom kita sebagai variabel CSS */
-  --color-dark-bg: #1A1A1A;
-  --color-dark-surface: #2A2A2A;
-  --color-teal-accent-500: #14b8a6;
-  --color-teal-accent-600: #0d9488;
-  --color-dark-text-primary: #E0E0E0;
-  --color-dark-text-secondary: #A0A0A0;
+  --color-dark-bg: #0a0a0b;
+  --color-dark-surface: #141416;
+  --color-dark-surface-hover: #1c1c1f;
+  --color-dark-border: #27272a;
+  --color-teal-400: #2dd4bf;
+  --color-teal-500: #14b8a6;
+  --color-teal-600: #0d9488;
+  --color-dark-text-primary: #fafafa;
+  --color-dark-text-secondary: #a1a1aa;
+  --color-dark-text-muted: #71717a;
 
-  /* Definisikan font kustom kita */
-  --font-sans: "Inter", sans-serif;
-  --font-mono: "Fira Code", monospace;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Fira Code", ui-monospace, monospace;
 }
 
-/* Menggunakan @layer untuk gaya dasar atau kustom */
 @layer base {
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code&display=swap');
-    
+  @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code&display=swap");
+
   body {
-    /* Menerapkan gaya dasar ke body menggunakan @apply */
-    @apply font-sans bg-gray-50 text-gray-800;
-    @apply dark:bg-dark-bg dark:text-dark-text-primary;
-    
-    transition-property: color, background-color;
-    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-    transition-duration: 150ms;
+    @apply font-sans bg-dark-bg text-dark-text-primary antialiased;
+  }
+
+  ::selection {
+    @apply bg-teal-500/30 text-white;
   }
 }
 
-
 .prose :where(code):not(:where(pre *)) {
-  @apply bg-dark-surface text-teal-accent-500 font-medium px-1.5 py-0.5 rounded-md;
-  /* Menghapus backtick secara visual */
-  &::before, &::after {
+  @apply bg-dark-surface text-teal-400 font-medium px-1.5 py-0.5 rounded-md text-[0.875em];
+  &::before,
+  &::after {
     content: none !important;
   }
 }
 
 .language-label {
-  @apply absolute top-2 left-4 text-xs font-mono text-dark-text-secondary;
+  @apply absolute top-2.5 left-4 text-[11px] font-mono text-dark-text-muted uppercase tracking-wider;
+}
+
+.code-block-wrapper pre {
+  @apply !rounded-xl;
+}
+
+.code-block-wrapper .copy-button {
+  @apply absolute top-3 right-3 p-2 bg-dark-surface/80 backdrop-blur-sm text-dark-text-secondary rounded-lg transition-all duration-200 border border-dark-border;
+}
+
+.code-block-wrapper:hover .copy-button {
+  @apply opacity-100;
+}
+
+.code-block-wrapper .copy-button:hover {
+  @apply bg-dark-surface-hover text-teal-400 border-teal-500/30;
+}
+
+/* Smooth scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-dark-border rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-dark-text-muted;
 }

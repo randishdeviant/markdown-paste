@@ -1,11 +1,13 @@
-import { NextResponse, type NextRequest } from 'next/server';
-import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { NextResponse } from "next/server";
+import { getPaste, deletePaste } from "@/lib/redis";
 
-
-export async function GET(request: NextRequest) {
+export async function GET(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
-    const id = request.nextUrl.pathname.split('/').pop();
-    
+    const { id } = await params;
+
     if (!id) {
       return NextResponse.json(
         { error: "ID parameter is missing in the URL." },
@@ -13,21 +15,42 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const supabase = createSupabaseServerClient();
+    const paste = await getPaste(id);
 
-    const { data: paste, error } = await supabase
-      .from('pastes')
-      .select('id, content, created_at')
-      .eq('id', id)
-      .single();
-
-    if (error || !paste) {
-      return NextResponse.json({ error: 'Paste not found.' }, { status: 404 });
+    if (!paste) {
+      return NextResponse.json({ error: "Paste not found." }, { status: 404 });
     }
 
     return NextResponse.json(paste);
   } catch (e) {
     console.error(`Unhandled error in GET /api/paste/[id]:`, e);
-    return NextResponse.json({ error: 'Server error.' }, { status: 500 });
+    return NextResponse.json({ error: "Server error." }, { status: 500 });
+  }
+}
+
+export async function DELETE(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+
+    if (!id) {
+      return NextResponse.json(
+        { error: "ID parameter is missing in the URL." },
+        { status: 400 }
+      );
+    }
+
+    const deleted = await deletePaste(id);
+
+    if (!deleted) {
+      return NextResponse.json({ error: "Paste not found." }, { status: 404 });
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (e) {
+    console.error(`Unhandled error in DELETE /api/paste/[id]:`, e);
+    return NextResponse.json({ error: "Server error." }, { status: 500 });
   }
 }

@@ -1,16 +1,16 @@
 # Markdown Pastebin
 
-> A modern, anonymous, and fast Markdown sharing service. Built with Next.js and Tailwind CSS v4.
+> A modern, anonymous, and fast Markdown sharing service. Built with Next.js, Upstash Redis, and Tailwind CSS v4.
 
 This web application allows users to anonymously paste, upload, and share Markdown content. Each submission is rendered into a clean, readable HTML page with syntax highlighting, accessible via a unique URL.
 
-## ✨ About This Project
+## About This Project
 
 This project was developed as a comprehensive exercise in building a full-stack web application using a modern technology stack. The primary goal was to create a high-performance, aesthetically pleasing, and functional "pastebin" service with a strong focus on user experience and developer best practices.
 
-The core functionality includes server-side rendering of Markdown, a RESTful API for programmatic access, and a responsive, dark-themed user interface. The entire development process involved iterative refinement, debugging complex build issues, and implementing advanced performance optimization techniques like proactive cache warming.
+The core functionality includes server-side rendering of Markdown, a RESTful API for programmatic access, and a responsive, dark-themed user interface. Pastes are stored in Upstash Redis with customizable expiration (default: 7 days).
 
-## 🚀 Features
+## Features
 
 -   **Anonymous Pasting:** No accounts or API keys required. Create and share freely.
 -   **File Upload & Direct Input:** Paste Markdown directly into a textarea or upload `.md` files from your device.
@@ -18,7 +18,7 @@ The core functionality includes server-side rendering of Markdown, a RESTful API
     -   Renders all standard Markdown elements, including tables (GFM).
     -   Beautiful syntax highlighting for dozens of languages via Shiki.
     -   Custom-styled inline code and code blocks.
--   **Public REST API:** A simple, unauthenticated API to create and retrieve pastes programmatically.
+-   **Public REST API:** A simple, unauthenticated API to create, retrieve, and delete pastes programmatically.
 -   **High-Performance Architecture:**
     -   Built with Next.js App Router.
     -   Static Site Generation (SSG) with Incremental Static Regeneration (ISR) for paste pages.
@@ -30,17 +30,32 @@ The core functionality includes server-side rendering of Markdown, a RESTful API
     -   "Copy to Clipboard" functionality for both paste URLs and code blocks.
     -   Language detection and labeling for code blocks.
     -   Client-side validation for file uploads.
+    -   **Delete pastes** manually via the UI or API.
+-   **Custom Expiration:** Choose when your paste expires: 1 day, 7 days, 30 days, or never.
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 -   **Framework:** Next.js (App Router)
 -   **Styling:** Tailwind CSS v4 (CSS-first configuration)
--   **Database:** Supabase (Postgres)
+-   **Database:** Upstash Redis
 -   **Deployment:** Vercel
 -   **Markdown Processing:** `unified` with `remark` and `rehype`.
 -   **Syntax Highlighting:** `Shiki`.
 
-## 📝 API Usage
+## Environment Variables
+
+Create a `.env.local` file with the following variables:
+
+```bash
+# Upstash Redis (required)
+UPSTASH_REDIS_REST_URL=https://your-instance.upstash.io
+UPSTASH_REDIS_REST_TOKEN=your-token-here
+
+# App URL for cache warming (optional but recommended)
+NEXT_PUBLIC_APP_URL=https://your-domain.vercel.app
+```
+
+## API Usage
 
 The API is public, free, and requires no authentication.
 
@@ -56,9 +71,15 @@ The API is public, free, and requires no authentication.
 
     ```json
     {
-      "content": "# Hello World\nThis is **Markdown**."
+      "content": "# Hello World\nThis is **Markdown**.",
+      "expires_in": 604800
     }
     ```
+
+    | Field | Type | Required | Description |
+    |-------|------|----------|-------------|
+    | `content` | string | Yes | The Markdown content (max 100 KB) |
+    | `expires_in` | number | No | TTL in seconds. Options: `86400` (1 day), `604800` (7 days, default), `2592000` (30 days), or omit for no expiry |
 
 -   **Success Response (200):**
 
@@ -66,7 +87,8 @@ The API is public, free, and requires no authentication.
     {
       "id": "abc123xyz",
       "url": "https://your-domain.vercel.app/p/abc123xyz",
-      "created_at": "2025-06-18T10:00:00.123Z"
+      "created_at": "2025-06-18T10:00:00.123Z",
+      "expires_at": "2025-06-25T10:00:00.123Z"
     }
     ```
 
@@ -89,7 +111,31 @@ The API is public, free, and requires no authentication.
     {
       "id": "abc123xyz",
       "content": "# Hello World\nThis is **Markdown**.",
-      "created_at": "2025-06-18T10:00:00.123Z"
+      "created_at": "2025-06-18T10:00:00.123Z",
+      "expires_at": "2025-06-25T10:00:00.123Z"
+    }
+    ```
+
+    Note: `expires_at` is `null` if the paste was created with no expiry.
+
+-   **Error Response (404):**
+    ```json
+    {
+      "error": "Paste not found."
+    }
+    ```
+
+---
+
+### Delete a Paste
+
+-   **Endpoint:** `DELETE /api/paste/:id`
+-   **Method:** `DELETE`
+-   **Success Response (200):**
+
+    ```json
+    {
+      "success": true
     }
     ```
 
@@ -126,7 +172,7 @@ The API is public, free, and requires no authentication.
     ]
     ```
 
-## 💻 API Examples
+## API Examples
 
 **Note:** Replace `https://markdownpasteit.vercel.app` with your own deployed application URL.
 
@@ -143,6 +189,10 @@ echo "Paste created at: $PASTE_URL"
 
 # Retrieve the raw content
 curl "${PASTE_URL/p/api/paste}"
+
+# Delete a paste
+PASTE_ID=$(echo $PASTE_URL | grep -o '[^/]*$')
+curl -X DELETE "https://markdownpasteit.vercel.app/api/paste/$PASTE_ID"
 ```
 
 ### Python (requests)
@@ -160,10 +210,10 @@ try:
         f"{BASE_URL}/api/paste", 
         json={"content": markdown_content}
     )
-    response.raise_for_status()  # Raises an exception for bad status codes
+    response.raise_for_status()
     
     paste_data = response.json()
-    print(f"✅ Paste created successfully!")
+    print(f"Paste created successfully!")
     print(f"   URL: {paste_data['url']}")
 
     # 2. Retrieve the raw content
@@ -172,12 +222,16 @@ try:
     response_get.raise_for_status()
     
     retrieved_content = response_get.json()['content']
-    print("\n✅ Content retrieved successfully:")
+    print("\nContent retrieved successfully:")
     print(retrieved_content)
 
-except requests.exceptions.RequestException as e:
-    print(f"❌ An error occurred: {e}")
+    # 3. Delete the paste
+    response_delete = requests.delete(f"{BASE_URL}/api/paste/{paste_id}")
+    response_delete.raise_for_status()
+    print("\nPaste deleted successfully!")
 
+except requests.exceptions.RequestException as e:
+    print(f"An error occurred: {e}")
 ```
 
 ### JavaScript (Node.js or Browser `fetch`)
@@ -212,7 +266,7 @@ console.log(greeting);
     }
 
     const newPaste = await createResponse.json();
-    console.log(`✅ Paste created at: ${newPaste.url}`);
+    console.log(`Paste created at: ${newPaste.url}`);
 
     // 2. Retrieve the content
     const getResponse = await fetch(`${BASE_URL}/api/paste/${newPaste.id}`);
@@ -221,18 +275,27 @@ console.log(greeting);
     }
     
     const retrievedPaste = await getResponse.json();
-    console.log('\n✅ Retrieved Content:');
+    console.log('\nRetrieved Content:');
     console.log(retrievedPaste.content);
 
+    // 3. Delete the paste
+    const deleteResponse = await fetch(`${BASE_URL}/api/paste/${newPaste.id}`, {
+      method: 'DELETE',
+    });
+    if (!deleteResponse.ok) {
+      throw new Error(`Failed to delete paste: ${await deleteResponse.text()}`);
+    }
+    console.log('\nPaste deleted successfully!');
+
   } catch (error) {
-    console.error('❌ Error:', error.message);
+    console.error('Error:', error.message);
   }
 }
 
 main();
 ```
 
-## ✅ Markdown Rendering Showcase
+## Markdown Rendering Showcase
 
 The following is a sample of Markdown that demonstrates the rendering capabilities of this application, including headings, lists, text formatting, tables, and code blocks with syntax highlighting.
 
@@ -321,7 +384,8 @@ my_paste.display()
   "features": [
     "API",
     "File Upload",
-    "Dark Mode"
+    "Dark Mode",
+    "Delete Paste"
   ],
   "isAwesome": true
 }
