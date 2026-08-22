@@ -143,6 +143,9 @@ export default function HomePage() {
             <p className="text-dark-text-secondary text-sm sm:text-base">
               Create and share beautifully rendered Markdown snippets. No account needed.
             </p>
+            <p className="text-yellow-400/80 text-xs mt-2">
+              ⚠ Wrap code in triple backticks (<code className="text-yellow-400">```</code>) for syntax highlighting.
+            </p>
           </div>
 
           {/* Editor */}
@@ -273,7 +276,7 @@ export default function HomePage() {
             Max 100 KB per paste
           </p>
           <Link
-            href="/p/_Plk0f0e"
+            href="/p/g-fZb6bp"
             className="text-xs text-dark-text-muted hover:text-teal-400 transition-colors"
           >
             API Docs
