@@ -18,7 +18,7 @@ The core functionality includes server-side rendering of Markdown, a RESTful API
     -   Renders all standard Markdown elements, including tables (GFM).
     -   Beautiful syntax highlighting for dozens of languages via Shiki.
     -   Custom-styled inline code and code blocks.
--   **Public REST API:** A simple, unauthenticated API to create, retrieve, and delete pastes programmatically.
+-   **Public REST API:** A simple, unauthenticated API to create and retrieve pastes programmatically.
 -   **High-Performance Architecture:**
     -   Built with Next.js App Router.
     -   Static Site Generation (SSG) with Incremental Static Regeneration (ISR) for paste pages.
@@ -30,7 +30,6 @@ The core functionality includes server-side rendering of Markdown, a RESTful API
     -   "Copy to Clipboard" functionality for both paste URLs and code blocks.
     -   Language detection and labeling for code blocks.
     -   Client-side validation for file uploads.
-    -   **Delete pastes** manually via the UI or API.
 -   **Custom Expiration:** Choose when your paste expires: 1 day, 7 days, 30 days, or never.
 
 ## Tech Stack
@@ -127,51 +126,6 @@ The API is public, free, and requires no authentication.
 
 ---
 
-### Delete a Paste
-
--   **Endpoint:** `DELETE /api/paste/:id`
--   **Method:** `DELETE`
--   **Success Response (200):**
-
-    ```json
-    {
-      "success": true
-    }
-    ```
-
--   **Error Response (404):**
-    ```json
-    {
-      "error": "Paste not found."
-    }
-    ```
-
----
-
-### Get Latest Pastes
-
--   **Endpoint:** `GET /api/pastes`
--   **Method:** `GET`
--   **Query Parameters (Optional):**
-    -   `limit`: Number of pastes to return. Defaults to `10`, with a maximum enforced limit of `50`.
-    -   Example: `/api/pastes?limit=5`
--   **Success Response (200):** An array of paste objects.
-
-    ```json
-    [
-      {
-        "id": "def456",
-        "content": "## Another Paste...",
-        "created_at": "2025-06-18T10:05:00.456Z"
-      },
-      {
-        "id": "abc123xyz",
-        "content": "# Hello World...",
-        "created_at": "2025-06-18T10:00:00.123Z"
-      }
-    ]
-    ```
-
 ## API Examples
 
 **Note:** Replace `https://markdownpasteit.vercel.app` with your own deployed application URL.
@@ -189,10 +143,6 @@ echo "Paste created at: $PASTE_URL"
 
 # Retrieve the raw content
 curl "${PASTE_URL/p/api/paste}"
-
-# Delete a paste
-PASTE_ID=$(echo $PASTE_URL | grep -o '[^/]*$')
-curl -X DELETE "https://markdownpasteit.vercel.app/api/paste/$PASTE_ID"
 ```
 
 ### Python (requests)
@@ -224,11 +174,6 @@ try:
     retrieved_content = response_get.json()['content']
     print("\nContent retrieved successfully:")
     print(retrieved_content)
-
-    # 3. Delete the paste
-    response_delete = requests.delete(f"{BASE_URL}/api/paste/{paste_id}")
-    response_delete.raise_for_status()
-    print("\nPaste deleted successfully!")
 
 except requests.exceptions.RequestException as e:
     print(f"An error occurred: {e}")
@@ -277,15 +222,6 @@ console.log(greeting);
     const retrievedPaste = await getResponse.json();
     console.log('\nRetrieved Content:');
     console.log(retrievedPaste.content);
-
-    // 3. Delete the paste
-    const deleteResponse = await fetch(`${BASE_URL}/api/paste/${newPaste.id}`, {
-      method: 'DELETE',
-    });
-    if (!deleteResponse.ok) {
-      throw new Error(`Failed to delete paste: ${await deleteResponse.text()}`);
-    }
-    console.log('\nPaste deleted successfully!');
 
   } catch (error) {
     console.error('Error:', error.message);
@@ -385,7 +321,7 @@ my_paste.display()
     "API",
     "File Upload",
     "Dark Mode",
-    "Delete Paste"
+    "Custom Expiry"
   ],
   "isAwesome": true
 }

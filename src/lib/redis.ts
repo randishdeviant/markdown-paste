@@ -1,17 +1,13 @@
 import { Redis } from "@upstash/redis";
+import {
+  DEFAULT_TTL_SECONDS,
+  EXPIRY_OPTIONS,
+  type ExpiryValue,
+} from "./constants";
 
 export const redis = Redis.fromEnv();
 
-const DEFAULT_TTL_SECONDS = 7 * 24 * 60 * 60; // 7 days
-
-export const EXPIRY_OPTIONS = [
-  { label: "1 Day", value: 1 * 24 * 60 * 60 },
-  { label: "7 Days", value: 7 * 24 * 60 * 60 },
-  { label: "30 Days", value: 30 * 24 * 60 * 60 },
-  { label: "Never", value: 0 },
-] as const;
-
-export type ExpiryValue = (typeof EXPIRY_OPTIONS)[number]["value"];
+export { EXPIRY_OPTIONS, type ExpiryValue };
 
 export interface PasteData {
   id: string;
@@ -57,24 +53,6 @@ export async function getPaste(id: string): Promise<PasteData | null> {
   const data = await redis.hgetall<PasteData>(`paste:${id}`);
   if (!data || Object.keys(data).length === 0) return null;
   return data;
-}
-
-export async function getLatestPastes(limit: number): Promise<PasteData[]> {
-  const ids = await redis.zrange<string[]>("pastes:index", 0, limit - 1, {
-    rev: true,
-  });
-
-  if (ids.length === 0) return [];
-
-  const pipeline = redis.pipeline();
-  for (const id of ids) {
-    pipeline.hgetall(`paste:${id}`);
-  }
-  const results = await pipeline.exec<PasteData[]>();
-
-  return results.filter(
-    (p): p is PasteData => p !== null && Object.keys(p).length > 0
-  );
 }
 
 export async function deletePaste(id: string): Promise<boolean> {

@@ -1,21 +1,25 @@
-import './globals.css'
-import type { Metadata } from 'next'
+import "./globals.css";
+import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: 'Markdown Pastebin',
-  description: 'Free and anonymous Markdown pastebin.',
-}
+  title: "Markdown Pastebin",
+  description: "Free and anonymous Markdown pastebin.",
+};
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
-      <body>
-        {children}
-      </body>
+      <head>
+        <link
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code&display=swap"
+          rel="stylesheet"
+        />
+      </head>
+      <body>{children}</body>
     </html>
-  )
+  );
 }

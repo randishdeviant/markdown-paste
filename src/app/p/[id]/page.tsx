@@ -3,7 +3,6 @@ import { getPaste, getLatestPasteIds } from "@/lib/redis";
 import { processMarkdown } from "@/lib/markdown";
 import Link from "next/link";
 import CodeBlockEnhancer from "@/components/CodeBlockEnhancer";
-import DeleteButton from "@/components/DeleteButton";
 
 const PasteIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -61,7 +60,6 @@ export default async function PastePage({ params }: PageProps) {
             >
               Raw
             </a>
-            <DeleteButton id={id} />
             <Link
               href="/"
               className="px-3 py-1.5 text-xs font-medium text-dark-bg bg-teal-400 rounded-lg hover:bg-teal-400/90 transition-colors"
