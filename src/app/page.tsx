@@ -46,7 +46,7 @@ export default function HomePage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           content,
-          expires_in: expiresIn > 0 ? expiresIn : undefined,
+          expires_in: expiresIn,
         }),
       });
       if (!res.ok) {
