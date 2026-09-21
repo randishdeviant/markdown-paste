@@ -276,7 +276,7 @@ export default function HomePage() {
             Max 100 KB per paste
           </p>
           <Link
-            href="/p/_Plk0f0e"
+            href="/docs"
             className="text-xs text-dark-text-muted hover:text-teal-400 transition-colors"
           >
             API Docs
