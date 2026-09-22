@@ -40,12 +40,26 @@ export default function HomePage() {
     setResult(null);
     setCopyButtonText("Copy");
 
+    const trimmed = content.trim();
+    if (trimmed.length < 10) {
+      setError("Content is too short. Please write at least 10 characters.");
+      setIsLoading(false);
+      return;
+    }
+
+    const backtickCount = (trimmed.match(/```/g) || []).length;
+    if (backtickCount % 2 !== 0) {
+      setError("Unclosed code block. Make sure triple backticks (```) are paired.");
+      setIsLoading(false);
+      return;
+    }
+
     try {
       const res = await fetch("/api/paste", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          content,
+          content: trimmed,
           expires_in: expiresIn,
         }),
       });

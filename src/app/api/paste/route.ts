@@ -1,9 +1,30 @@
 import { NextResponse } from "next/server";
 import { nanoid } from "nanoid";
+import { unified } from "unified";
+import remarkParse from "remark-parse";
 import { createPaste, EXPIRY_OPTIONS, type ExpiryValue } from "@/lib/redis";
 
 const MAX_CONTENT_LENGTH = 100 * 1024; // 100 KB
 const VALID_EXPIRY_VALUES = EXPIRY_OPTIONS.map((o) => o.value);
+
+const BASE64_PATTERN = /^[A-Za-z0-9+/=\s]+$/;
+
+function hasMarkdownStructure(content: string): boolean {
+  return (
+    /^#{1,6}\s/m.test(content) ||
+    /^[\s]*[-*+]\s/m.test(content) ||
+    /^[\s]*\d+\.\s/m.test(content) ||
+    /^```/m.test(content) ||
+    /\n\n/.test(content)
+  );
+}
+
+function isBase64Spam(content: string): boolean {
+  const trimmed = content.trim();
+  if (trimmed.length < 20) return false;
+  if (!BASE64_PATTERN.test(trimmed)) return false;
+  return !hasMarkdownStructure(content);
+}
 
 export async function POST(request: Request) {
   try {
@@ -23,6 +44,22 @@ export async function POST(request: Request) {
         {
           error: `Content exceeds maximum length of ${MAX_CONTENT_LENGTH} bytes.`,
         },
+        { status: 400 }
+      );
+    }
+
+    if (isBase64Spam(content)) {
+      return NextResponse.json(
+        { error: "Content appears to be encoded data, not Markdown." },
+        { status: 400 }
+      );
+    }
+
+    try {
+      unified().use(remarkParse).parse(content);
+    } catch {
+      return NextResponse.json(
+        { error: "Content contains invalid Markdown syntax." },
         { status: 400 }
       );
     }
