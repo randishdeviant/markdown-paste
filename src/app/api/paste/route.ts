@@ -3,28 +3,10 @@ import { nanoid } from "nanoid";
 import { unified } from "unified";
 import remarkParse from "remark-parse";
 import { createPaste, EXPIRY_OPTIONS, type ExpiryValue } from "@/lib/redis";
+import { isBase64Spam } from "@/lib/validation";
 
 const MAX_CONTENT_LENGTH = 100 * 1024; // 100 KB
 const VALID_EXPIRY_VALUES = EXPIRY_OPTIONS.map((o) => o.value);
-
-const BASE64_PATTERN = /^[A-Za-z0-9+/=\s]+$/;
-
-function hasMarkdownStructure(content: string): boolean {
-  return (
-    /^#{1,6}\s/m.test(content) ||
-    /^[\s]*[-*+]\s/m.test(content) ||
-    /^[\s]*\d+\.\s/m.test(content) ||
-    /^```/m.test(content) ||
-    /\n\n/.test(content)
-  );
-}
-
-function isBase64Spam(content: string): boolean {
-  const trimmed = content.trim();
-  if (trimmed.length < 20) return false;
-  if (!BASE64_PATTERN.test(trimmed)) return false;
-  return !hasMarkdownStructure(content);
-}
 
 export async function POST(request: Request) {
   try {
