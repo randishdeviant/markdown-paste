@@ -1,5 +1,9 @@
 import { describe, it, expect } from "vitest";
-import { hasMarkdownStructure, isBase64Spam } from "../validation";
+import {
+  hasMarkdownStructure,
+  isBase64Spam,
+  wrapHtmlInCodeBlocks,
+} from "../validation";
 
 describe("hasMarkdownStructure", () => {
   it("detects heading", () => {
@@ -94,5 +98,61 @@ describe("isBase64Spam", () => {
 
   it("returns false for non-base64 characters", () => {
     expect(isBase64Spam("Hello! This has @#$%^&* characters.")).toBe(false);
+  });
+});
+
+describe("wrapHtmlInCodeBlocks", () => {
+  it("wraps raw HTML in code block", () => {
+    expect(wrapHtmlInCodeBlocks("<div>Hello</div>")).toBe(
+      "```html\n<div>Hello</div>\n```"
+    );
+  });
+
+  it("wraps script tag in code block", () => {
+    expect(wrapHtmlInCodeBlocks("<script>alert('xss')</script>")).toBe(
+      "```html\n<script>alert('xss')</script>\n```"
+    );
+  });
+
+  it("wraps multi-line HTML block", () => {
+    const input = "<div>\n  <p>Hello</p>\n</div>";
+    expect(wrapHtmlInCodeBlocks(input)).toBe(
+      "```html\n<div>\n  <p>Hello</p>\n</div>\n```"
+    );
+  });
+
+  it("does not wrap content without HTML tags", () => {
+    expect(wrapHtmlInCodeBlocks("# Hello World")).toBe("# Hello World");
+  });
+
+  it("does not wrap content already in code block", () => {
+    const input = "```html\n<div>Hello</div>\n```";
+    expect(wrapHtmlInCodeBlocks(input)).toBe(input);
+  });
+
+  it("preserves existing code blocks and wraps other HTML", () => {
+    const input = "```js\nconst x = 1;\n```\n\n<div>Hello</div>";
+    expect(wrapHtmlInCodeBlocks(input)).toBe(
+      "```js\nconst x = 1;\n```\n\n```html\n<div>Hello</div>\n```"
+    );
+  });
+
+  it("wraps iframe tag", () => {
+    expect(wrapHtmlInCodeBlocks('<iframe src="https://example.com"></iframe>')).toBe(
+      '```html\n<iframe src="https://example.com"></iframe>\n```'
+    );
+  });
+
+  it("wraps table HTML", () => {
+    const input = "<table>\n  <tr><td>A</td></tr>\n</table>";
+    expect(wrapHtmlInCodeBlocks(input)).toBe(
+      "```html\n<table>\n  <tr><td>A</td></tr>\n</table>\n```"
+    );
+  });
+
+  it("ignores inline markdown formatting", () => {
+    expect(wrapHtmlInCodeBlocks("**bold** and *italic*")).toBe(
+      "**bold** and *italic*"
+    );
   });
 });

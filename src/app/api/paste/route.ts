@@ -3,7 +3,7 @@ import { nanoid } from "nanoid";
 import { unified } from "unified";
 import remarkParse from "remark-parse";
 import { createPaste, EXPIRY_OPTIONS, type ExpiryValue } from "@/lib/redis";
-import { isBase64Spam } from "@/lib/validation";
+import { isBase64Spam, wrapHtmlInCodeBlocks } from "@/lib/validation";
 
 const MAX_CONTENT_LENGTH = 100 * 1024; // 100 KB
 const VALID_EXPIRY_VALUES = EXPIRY_OPTIONS.map((o) => o.value);
@@ -59,8 +59,9 @@ export async function POST(request: Request) {
       ttl = expires_in as ExpiryValue;
     }
 
+    const sanitized = wrapHtmlInCodeBlocks(content);
     const id = nanoid(8);
-    const paste = await createPaste(id, content, ttl);
+    const paste = await createPaste(id, sanitized, ttl);
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL;
     let finalUrl: string;
