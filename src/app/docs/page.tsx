@@ -3,6 +3,7 @@ import { join } from "path";
 import Link from "next/link";
 import { processMarkdown } from "@/lib/markdown";
 import CodeBlockEnhancer from "@/components/CodeBlockEnhancer";
+import ImageZoomEnhancer from "@/components/ImageZoomEnhancer";
 
 const PasteIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -39,6 +40,7 @@ export default async function DocsPage() {
       </main>
 
       <CodeBlockEnhancer />
+      <ImageZoomEnhancer />
     </div>
   );
 }

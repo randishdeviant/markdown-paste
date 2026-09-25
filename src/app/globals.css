@@ -56,6 +56,38 @@
   @apply bg-dark-surface-hover text-teal-400 border-teal-500/30;
 }
 
+/* Image zoom lightbox */
+.image-zoom-overlay {
+  @apply fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  cursor: zoom-out;
+}
+
+.image-zoom-overlay.active {
+  @apply opacity-100;
+}
+
+.image-zoom-img {
+  @apply max-h-[90vh] max-w-[90vw] object-contain rounded-lg shadow-2xl;
+  animation: image-zoom-in 0.2s ease;
+}
+
+@keyframes image-zoom-in {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.image-zoom-close {
+  @apply absolute top-4 right-4 p-2 rounded-full bg-dark-surface/80 text-dark-text-secondary border border-dark-border hover:text-teal-400 hover:border-teal-500/30 transition-all;
+}
+
 /* Smooth scrollbar */
 ::-webkit-scrollbar {
   width: 6px;

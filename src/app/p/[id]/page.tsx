@@ -3,6 +3,7 @@ import { getPaste } from "@/lib/redis";
 import { processMarkdown } from "@/lib/markdown";
 import Link from "next/link";
 import CodeBlockEnhancer from "@/components/CodeBlockEnhancer";
+import ImageZoomEnhancer from "@/components/ImageZoomEnhancer";
 
 export const dynamic = "force-dynamic";
 
@@ -85,6 +86,7 @@ export default async function PastePage({ params }: PageProps) {
       </main>
 
       <CodeBlockEnhancer />
+      <ImageZoomEnhancer />
     </div>
   );
 }
