@@ -121,3 +121,41 @@ describe("processMarkdown – markdown features", { timeout: 30000 }, () => {
     expect(html).toContain('src="https://example.com/a.png"');
   });
 });
+
+describe("processMarkdown – language loading", { timeout: 30000 }, () => {
+  it("does not run Shiki for content without code fences", async () => {
+    const html = await processMarkdown("# Tanpa kode\n\nHanya teks biasa.");
+
+    expect(html).toContain("<h1>Tanpa kode</h1>");
+    expect(html).not.toContain("shiki");
+  });
+
+  it("highlights a preloaded language", async () => {
+    const html = await processMarkdown("```python\nprint('hi')\n```");
+
+    expect(html).toContain("shiki");
+    expect(html).toContain("print");
+  });
+
+  it("highlights a language that is loaded lazily", async () => {
+    const html = await processMarkdown("```rust\nfn main() {}\n```");
+
+    expect(html).toContain("shiki");
+    expect(html).toContain("fn");
+  });
+
+  it("falls back gracefully for an unknown language", async () => {
+    const html = await processMarkdown("```foobar\nhello world\n```");
+
+    expect(html).toContain("<pre");
+    expect(html).toContain("hello world");
+  });
+
+  it("highlights fenced code inside a blockquote", async () => {
+    const html = await processMarkdown("> ```js\n> const x = 1;\n> ```");
+
+    expect(html).toContain("shiki");
+    expect(html).toContain("const");
+  });
+});
+
