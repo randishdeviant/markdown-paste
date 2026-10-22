@@ -57,7 +57,7 @@ NEXT_PUBLIC_APP_URL=https://your-domain.vercel.app
 
 The API is public, free, and requires no authentication.
 
-**Rate limit:** `POST /api/paste` is limited to **10 requests per minute per IP address**. When exceeded, the API responds with `429 Too Many Requests` and a `Retry-After` header (in seconds).
+**Rate limit:** `POST /api/paste` is limited to **10 requests per minute per IP address**. Every response includes `X-RateLimit-Limit`, `X-RateLimit-Remaining`, and `X-RateLimit-Reset` (Unix timestamp in seconds). When the limit is exceeded, the API responds with `429 Too Many Requests` and a `Retry-After` header (in seconds).
 
 ---
 
@@ -78,7 +78,7 @@ The API is public, free, and requires no authentication.
 
     | Field | Type | Required | Description |
     |-------|------|----------|-------------|
-    | `content` | string | Yes | The Markdown content (max 100 KB) |
+    | `content` | string | Yes | The Markdown content (max 100 KB, measured in UTF-8 bytes) |
     | `expires_in` | number | No | TTL in seconds. Options: `86400` (1 day), `604800` (7 days, default), `2592000` (30 days), `15552000` (6 months), `31536000` (1 year). Omitting it uses the 7-day default. |
 
 -   **Success Response (200):**
@@ -96,6 +96,27 @@ The API is public, free, and requires no authentication.
     ```json
     {
       "error": "Content is required."
+    }
+    ```
+
+-   **Error Response (413):** returned when the request body is too large.
+    ```json
+    {
+      "error": "Request body exceeds maximum size of 102400 bytes."
+    }
+    ```
+
+-   **Error Response (429):** returned when the rate limit is exceeded.
+    ```json
+    {
+      "error": "Too many requests. Please try again later."
+    }
+    ```
+
+-   **Error Response (500):** returned when the storage backend fails.
+    ```json
+    {
+      "error": "Server error."
     }
     ```
 

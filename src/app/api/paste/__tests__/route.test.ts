@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { POST } from "../route";
 import * as idRoute from "@/app/api/paste/[id]/route";
 import { createPaste } from "@/lib/redis";
-import { createPasteLimiter } from "@/lib/ratelimit";
+import { createPasteLimiter, getClientIp } from "@/lib/ratelimit";
 import { EXPIRY_OPTIONS } from "@/lib/constants";
 
 vi.mock("@/lib/redis", async () => {
@@ -21,6 +21,7 @@ vi.mock("@/lib/ratelimit", () => ({
 
 const limitMock = vi.mocked(createPasteLimiter.limit);
 const createPasteMock = vi.mocked(createPaste);
+const getClientIpMock = vi.mocked(getClientIp);
 
 function makeRequest(body: unknown, ip = "203.0.113.1") {
   return new Request("http://localhost/api/paste", {
@@ -62,6 +63,7 @@ const createdPaste = {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  getClientIpMock.mockReturnValue("203.0.113.1");
   allowRequest();
   createPasteMock.mockImplementation(async (id, content) => ({
     ...createdPaste,
@@ -118,6 +120,79 @@ describe("POST /api/paste", () => {
     );
   });
 
+  it("returns 400 for invalid JSON", async () => {
+    const res = await POST(
+      new Request("http://localhost/api/paste", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: "{not valid json",
+      })
+    );
+
+    expect(res.status).toBe(400);
+    expect(createPasteMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects content larger than 100 KB in UTF-8 bytes", async () => {
+    // 51_500 characters but 103_000 bytes in UTF-8, so only a byte-aware
+    // check catches it.
+    const res = await POST(makeRequest({ content: "é".repeat(51_500) }));
+
+    expect(res.status).toBe(400);
+    expect(createPasteMock).not.toHaveBeenCalled();
+  });
+
+  it("returns 413 when Content-Length exceeds the limit", async () => {
+    const res = await POST(
+      new Request("http://localhost/api/paste", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "content-length": String(200 * 1024),
+        },
+        body: "{}",
+      })
+    );
+
+    expect(res.status).toBe(413);
+    expect(createPasteMock).not.toHaveBeenCalled();
+  });
+
+  it("returns 500 when storage fails", async () => {
+    createPasteMock.mockRejectedValue(new Error("redis down"));
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    try {
+      const res = await POST(makeRequest({ content: "# Hello" }));
+
+      expect(res.status).toBe(500);
+    } finally {
+      errorSpy.mockRestore();
+    }
+  });
+
+  it("exposes rate limit headers", async () => {
+    const res = await POST(makeRequest({ content: "# Hello" }));
+
+    expect(res.headers.get("x-ratelimit-limit")).toBe("10");
+    expect(res.headers.get("x-ratelimit-remaining")).toBe("9");
+    expect(res.headers.get("x-ratelimit-reset")).toMatch(/^\d+$/);
+  });
+
+  it("skips the rate limiter when the client IP is unknown", async () => {
+    getClientIpMock.mockReturnValue(null);
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    try {
+      const res = await POST(makeRequest({ content: "# Hello" }));
+
+      expect(res.status).toBe(200);
+      expect(limitMock).not.toHaveBeenCalled();
+    } finally {
+      warnSpy.mockRestore();
+    }
+  });
+
   it("returns 429 when the rate limit is exceeded", async () => {
     denyRequest();
 
@@ -125,6 +200,7 @@ describe("POST /api/paste", () => {
 
     expect(res.status).toBe(429);
     expect(res.headers.get("Retry-After")).toBeTruthy();
+    expect(res.headers.get("x-ratelimit-remaining")).toBe("0");
     expect(createPasteMock).not.toHaveBeenCalled();
   });
 
