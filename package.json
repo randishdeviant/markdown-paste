@@ -10,6 +10,8 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@shikijs/rehype": "^3.23.0",
+    "@upstash/ratelimit": "^2.2.0",
     "@upstash/redis": "^1.38.2",
     "@vercel/analytics": "^2.0.1",
     "nanoid": "^5.1.5",
@@ -28,7 +30,6 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
-    "@shikijs/rehype": "^3.6.0",
     "@tailwindcss/postcss": "^4",
     "@tailwindcss/typography": "^0.5.16",
     "@types/node": "^20",

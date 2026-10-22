@@ -37,11 +37,9 @@ export async function createPaste(
 
   const pipeline = redis.pipeline();
   pipeline.hset(`paste:${id}`, paste);
-  pipeline.zadd("pastes:index", { score: timestamp, member: id });
 
   if (effectiveTtl > 0) {
     pipeline.expire(`paste:${id}`, effectiveTtl);
-    pipeline.expire("pastes:index", effectiveTtl);
   }
 
   await pipeline.exec();
@@ -53,19 +51,4 @@ export async function getPaste(id: string): Promise<PasteData | null> {
   const data = await redis.hgetall<PasteData>(`paste:${id}`);
   if (!data || Object.keys(data).length === 0) return null;
   return data;
-}
-
-export async function deletePaste(id: string): Promise<boolean> {
-  const pipeline = redis.pipeline();
-  pipeline.del(`paste:${id}`);
-  pipeline.zrem("pastes:index", id);
-  const results = await pipeline.exec<number[]>();
-
-  return results[0] === 1;
-}
-
-export async function getLatestPasteIds(limit: number): Promise<string[]> {
-  return redis.zrange<string[]>("pastes:index", 0, limit - 1, {
-    rev: true,
-  });
 }

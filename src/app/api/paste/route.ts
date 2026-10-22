@@ -3,6 +3,7 @@ import { nanoid } from "nanoid";
 import { unified } from "unified";
 import remarkParse from "remark-parse";
 import { createPaste, EXPIRY_OPTIONS, type ExpiryValue } from "@/lib/redis";
+import { createPasteLimiter, getClientIp } from "@/lib/ratelimit";
 import { isBase64Spam } from "@/lib/validation";
 
 const MAX_CONTENT_LENGTH = 100 * 1024; // 100 KB
@@ -10,6 +11,25 @@ const VALID_EXPIRY_VALUES = EXPIRY_OPTIONS.map((o) => o.value);
 
 export async function POST(request: Request) {
   try {
+    const ip = getClientIp(request);
+
+    try {
+      const { success, reset } = await createPasteLimiter.limit(ip);
+      if (!success) {
+        const retryAfter = Math.max(1, Math.ceil((reset - Date.now()) / 1000));
+        return NextResponse.json(
+          { error: "Too many requests. Please try again later." },
+          {
+            status: 429,
+            headers: { "Retry-After": String(retryAfter) },
+          }
+        );
+      }
+    } catch (rateLimitError) {
+      // Fail open: a Redis hiccup should not take the whole endpoint down.
+      console.error("Rate limit check failed; allowing request:", rateLimitError);
+    }
+
     const { content, expires_in } = (await request.json()) as {
       content?: string;
       expires_in?: number;
@@ -62,21 +82,10 @@ export async function POST(request: Request) {
     const id = nanoid(8);
     const paste = await createPaste(id, content, ttl);
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL;
-    let finalUrl: string;
-
-    if (appUrl) {
-      finalUrl = `${appUrl}/p/${paste.id}`;
-      fetch(finalUrl).catch((err) => {
-        console.error(
-          `Failed to warm cache for new paste ${paste.id}:`,
-          err.message
-        );
-      });
-    } else {
-      console.warn("Cache warming skipped: NEXT_PUBLIC_APP_URL is not set.");
-      finalUrl = `https://${request.headers.get("host")}/p/${paste.id}`;
-    }
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "");
+    const finalUrl = appUrl
+      ? `${appUrl}/p/${paste.id}`
+      : `${new URL(request.url).origin}/p/${paste.id}`;
 
     return NextResponse.json({
       id: paste.id,

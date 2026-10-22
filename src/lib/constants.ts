@@ -4,7 +4,8 @@ export const EXPIRY_OPTIONS = [
   { label: "1 Day", value: 1 * 24 * 60 * 60 },
   { label: "7 Days", value: 7 * 24 * 60 * 60 },
   { label: "30 Days", value: 30 * 24 * 60 * 60 },
-  { label: "Never", value: 0 },
+  { label: "6 Months", value: 180 * 24 * 60 * 60 },
+  { label: "1 Year", value: 365 * 24 * 60 * 60 },
 ] as const;
 
 export type ExpiryValue = (typeof EXPIRY_OPTIONS)[number]["value"];

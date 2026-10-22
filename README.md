@@ -22,8 +22,6 @@ The core functionality includes server-side rendering of Markdown, a RESTful API
 -   **Public REST API:** A simple, unauthenticated API to create and retrieve pastes programmatically.
 -   **High-Performance Architecture:**
     -   Built with Next.js App Router.
-    -   Static Site Generation (SSG) with Incremental Static Regeneration (ISR) for paste pages.
-    -   **Proactive Cache Warming:** New pastes are pre-rendered server-side, ensuring the first user view is always instantaneous.
 -   **Modern Dark UI:**
     -   A sleek, responsive, dark-themed interface designed for readability and comfort.
     -   Multi-column layout on desktop that gracefully collapses on mobile devices.
@@ -31,7 +29,7 @@ The core functionality includes server-side rendering of Markdown, a RESTful API
     -   "Copy to Clipboard" functionality for both paste URLs and code blocks.
     -   Language detection and labeling for code blocks.
     -   Client-side validation for file uploads.
--   **Custom Expiration:** Choose when your paste expires: 1 day, 7 days, 30 days, or never.
+-   **Custom Expiration:** Choose when your paste expires: 1 day, 7 days, 30 days, 6 months, or 1 year.
 
 ## Tech Stack
 
@@ -51,13 +49,15 @@ Create a `.env.local` file with the following variables:
 UPSTASH_REDIS_REST_URL=https://your-instance.upstash.io
 UPSTASH_REDIS_REST_TOKEN=your-token-here
 
-# App URL for cache warming (optional but recommended)
+# App URL used when returning paste links (optional but recommended)
 NEXT_PUBLIC_APP_URL=https://your-domain.vercel.app
 ```
 
 ## API Usage
 
 The API is public, free, and requires no authentication.
+
+**Rate limit:** `POST /api/paste` is limited to **10 requests per minute per IP address**. When exceeded, the API responds with `429 Too Many Requests` and a `Retry-After` header (in seconds).
 
 ---
 
@@ -79,7 +79,7 @@ The API is public, free, and requires no authentication.
     | Field | Type | Required | Description |
     |-------|------|----------|-------------|
     | `content` | string | Yes | The Markdown content (max 100 KB) |
-    | `expires_in` | number | No | TTL in seconds. Options: `86400` (1 day), `604800` (7 days, default), `2592000` (30 days), or omit for no expiry |
+    | `expires_in` | number | No | TTL in seconds. Options: `86400` (1 day), `604800` (7 days, default), `2592000` (30 days), `15552000` (6 months), `31536000` (1 year). Omitting it uses the 7-day default. |
 
 -   **Success Response (200):**
 
@@ -116,7 +116,7 @@ The API is public, free, and requires no authentication.
     }
     ```
 
-    Note: `expires_at` is `null` if the paste was created with no expiry.
+    Note: `expires_at` is `null` only for legacy pastes created before the "Never" option was removed.
 
 -   **Error Response (404):**
     ```json
