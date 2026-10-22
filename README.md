@@ -17,6 +17,7 @@ The core functionality includes server-side rendering of Markdown, a RESTful API
 -   **Advanced Markdown Rendering:**
     -   Renders all standard Markdown elements, including tables (GFM).
     -   Beautiful syntax highlighting for dozens of languages via Shiki.
+    -   Raw HTML is rendered with GitHub-style sanitization: inline elements like `<span>`, `<kbd>`, and `<details>` work, while scripts, styles, event handlers, and dangerous URLs are stripped.
     -   Custom-styled inline code and code blocks.
 -   **Public REST API:** A simple, unauthenticated API to create and retrieve pastes programmatically.
 -   **High-Performance Architecture:**

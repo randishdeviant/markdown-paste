@@ -158,7 +158,7 @@ export default function HomePage() {
               Create and share beautifully rendered Markdown snippets. No account needed.
             </p>
             <p className="text-yellow-400/80 text-xs mt-2">
-              ⚠ Wrap code in triple backticks (<code className="text-yellow-400">```</code>) for syntax highlighting.
+              ⚠ Wrap code in triple backticks (<code className="text-yellow-400">```</code>) for syntax highlighting. HTML is rendered with GitHub-style sanitization.
             </p>
           </div>
 
