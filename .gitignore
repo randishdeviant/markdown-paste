@@ -44,3 +44,5 @@ next-env.d.ts
 
 # manual test data
 test-strings.txt
+
+.codegraph
