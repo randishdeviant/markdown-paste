@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { POST } from "../route";
+import { POST, OPTIONS } from "../route";
 import * as idRoute from "@/app/api/paste/[id]/route";
-import { createPaste } from "@/lib/redis";
+import { createPaste, getPaste } from "@/lib/redis";
 import { createPasteLimiter, getClientIp } from "@/lib/ratelimit";
 import { EXPIRY_OPTIONS } from "@/lib/constants";
 
@@ -21,6 +21,7 @@ vi.mock("@/lib/ratelimit", () => ({
 
 const limitMock = vi.mocked(createPasteLimiter.limit);
 const createPasteMock = vi.mocked(createPaste);
+const getPasteMock = vi.mocked(getPaste);
 const getClientIpMock = vi.mocked(getClientIp);
 
 function makeRequest(body: unknown, ip = "203.0.113.1") {
@@ -235,5 +236,42 @@ describe("POST /api/paste", () => {
 describe("DELETE /api/paste/[id]", () => {
   it("is no longer exposed", () => {
     expect("DELETE" in idRoute).toBe(false);
+  });
+});
+
+describe("CORS", () => {
+  it("answers POST preflight with 204 and CORS headers", () => {
+    const response = OPTIONS();
+
+    expect(response.status).toBe(204);
+    expect(response.headers.get("access-control-allow-origin")).toBe("*");
+    expect(response.headers.get("access-control-allow-methods")).toContain(
+      "POST"
+    );
+  });
+
+  it("adds CORS headers to POST responses", async () => {
+    const response = await POST(makeRequest({ content: "# Hello" }));
+
+    expect(response.headers.get("access-control-allow-origin")).toBe("*");
+  });
+
+  it("adds CORS headers to GET responses", async () => {
+    getPasteMock.mockResolvedValue(createdPaste);
+
+    const response = await idRoute.GET(
+      new Request("http://localhost/api/paste/testid123"),
+      { params: Promise.resolve({ id: "testid123" }) }
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("access-control-allow-origin")).toBe("*");
+  });
+
+  it("answers GET preflight with 204", () => {
+    const response = idRoute.OPTIONS();
+
+    expect(response.status).toBe(204);
+    expect(response.headers.get("access-control-allow-origin")).toBe("*");
   });
 });

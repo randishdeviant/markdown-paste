@@ -1,6 +1,9 @@
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { getPaste } from "@/lib/redis";
 import { processMarkdown } from "@/lib/markdown";
+import { getAppUrl } from "@/lib/url";
 import Link from "next/link";
 import CodeBlockEnhancer from "@/components/CodeBlockEnhancer";
 import ImageZoomEnhancer from "@/components/ImageZoomEnhancer";
@@ -17,6 +20,18 @@ type PageProps = {
   params: Promise<{ id: string }>;
 };
 
+export async function generateMetadata({
+  params,
+}: PageProps): Promise<Metadata> {
+  const { id } = await params;
+
+  return {
+    // Use only the ID: never leak paste content through metadata or previews.
+    title: `Markdown Paste — ${id}`,
+    robots: { index: false, follow: false },
+  };
+}
+
 export default async function PastePage({ params }: PageProps) {
   const { id } = await params;
   const paste = await getPaste(id);
@@ -26,7 +41,11 @@ export default async function PastePage({ params }: PageProps) {
   }
 
   const processedHtml = await processMarkdown(paste.content);
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "";
+  const requestHeaders = await headers();
+  const host = requestHeaders.get("host");
+  const protocol = requestHeaders.get("x-forwarded-proto") ?? "http";
+  const origin = host ? `${protocol}://${host}` : "";
+  const appUrl = getAppUrl(origin);
   const rawApiUrl = `${appUrl}/api/paste/${id}`;
 
   const createdDate = new Date(paste.created_at);
