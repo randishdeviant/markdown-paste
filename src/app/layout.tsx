@@ -1,6 +1,19 @@
 import "./globals.css";
 import type { Metadata } from "next";
-import { Analytics } from "@vercel/analytics/next";
+import { Inter, Fira_Code } from "next/font/google";
+import Analytics from "@/components/Analytics";
+
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
+});
+
+const firaCode = Fira_Code({
+  subsets: ["latin"],
+  variable: "--font-fira",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "Markdown Pastebin",
@@ -13,13 +26,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="dark" suppressHydrationWarning>
-      <head>
-        <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code&display=swap"
-          rel="stylesheet"
-        />
-      </head>
+    <html
+      lang="en"
+      className={`dark ${inter.variable} ${firaCode.variable}`}
+      suppressHydrationWarning
+    >
       <body>
         {children}
         <Analytics />

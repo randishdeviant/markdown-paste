@@ -81,10 +81,7 @@ export default function HomePage() {
     try {
       await navigator.clipboard.writeText(text);
       setCopyButtonText("Copied!");
-      setTimeout(() => {
-        setResult(null);
-        setCopyButtonText("Copy");
-      }, 3500);
+      setTimeout(() => setCopyButtonText("Copy"), 2000);
     } catch {
       setCopyButtonText("Failed!");
       setTimeout(() => setCopyButtonText("Copy"), 2000);
@@ -270,6 +267,16 @@ export default function HomePage() {
                     </button>
                   </div>
                 </div>
+                <button
+                  type="button"
+                  onClick={() => setResult(null)}
+                  aria-label="Dismiss result"
+                  className="shrink-0 p-1.5 text-dark-text-muted hover:text-dark-text-primary hover:bg-dark-surface-hover rounded-lg transition-colors"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
               </div>
             </div>
           )}

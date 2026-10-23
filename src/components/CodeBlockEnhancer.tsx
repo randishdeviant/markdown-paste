@@ -2,6 +2,19 @@
 
 import { useEffect } from "react";
 
+const COPY_ICON = `
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+  </svg>
+`;
+
+const CHECK_ICON = `
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <polyline points="20 6 9 17 4 12"></polyline>
+  </svg>
+`;
+
 export default function CodeBlockEnhancer() {
   useEffect(() => {
     document.querySelectorAll("pre").forEach((preElement) => {
@@ -25,29 +38,19 @@ export default function CodeBlockEnhancer() {
       }
 
       const button = document.createElement("button");
+      button.type = "button";
       button.className = "copy-button opacity-0";
-      button.innerHTML = `
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-        </svg>
-      `;
+      button.setAttribute("aria-label", "Copy code");
+      button.innerHTML = COPY_ICON;
 
       button.addEventListener("click", () => {
         const code = codeElement?.innerText || "";
         navigator.clipboard.writeText(code).then(() => {
-          button.innerHTML = `
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="20 6 9 17 4 12"></polyline>
-            </svg>
-          `;
+          button.innerHTML = CHECK_ICON;
+          button.setAttribute("aria-label", "Copied");
           setTimeout(() => {
-            button.innerHTML = `
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-              </svg>
-            `;
+            button.innerHTML = COPY_ICON;
+            button.setAttribute("aria-label", "Copy code");
           }, 2000);
         });
       });

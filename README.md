@@ -42,7 +42,7 @@ The core functionality includes server-side rendering of Markdown, a RESTful API
 
 ## Environment Variables
 
-Create a `.env.local` file with the following variables:
+Copy `.env.example` to `.env.local` and fill in the values:
 
 ```bash
 # Upstash Redis (required)
@@ -58,6 +58,10 @@ NEXT_PUBLIC_APP_URL=https://your-domain.vercel.app
 The API is public, free, and requires no authentication.
 
 **Rate limit:** `POST /api/paste` is limited to **10 requests per minute per IP address**. Every response includes `X-RateLimit-Limit`, `X-RateLimit-Remaining`, and `X-RateLimit-Reset` (Unix timestamp in seconds). When the limit is exceeded, the API responds with `429 Too Many Requests` and a `Retry-After` header (in seconds).
+
+**CORS:** All API responses include permissive CORS headers (`Access-Control-Allow-Origin: *`), and `OPTIONS` is supported, so browser-based clients on other origins can call the API directly. Credentials are not supported.
+
+**Health check:** `GET /api/health` returns `200 {"status":"ok"}` when Redis is reachable, or `503 {"status":"degraded"}` otherwise.
 
 ---
 

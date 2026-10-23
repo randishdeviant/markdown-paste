@@ -14,8 +14,8 @@
   --color-dark-text-secondary: #a1a1aa;
   --color-dark-text-muted: #71717a;
 
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "Fira Code", ui-monospace, monospace;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-fira), ui-monospace, monospace;
 }
 
 @layer base {
