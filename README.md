@@ -18,6 +18,7 @@ The core functionality includes server-side rendering of Markdown, a RESTful API
     -   Renders all standard Markdown elements, including tables (GFM).
     -   Beautiful syntax highlighting for dozens of languages via Shiki.
     -   Raw HTML is rendered with GitHub-style sanitization: inline elements like `<span>`, `<kbd>`, and `<details>` work, while scripts, styles, event handlers, and dangerous URLs are stripped.
+    -   Syntax extensions: `[[#Heading]]` table-of-contents links, `^superscript^` plus `<sub>`/`<sup>`, and footnotes `[^1]` with two-way navigation.
     -   Custom-styled inline code and code blocks.
 -   **Public REST API:** A simple, unauthenticated API to create and retrieve pastes programmatically.
 -   **High-Performance Architecture:**
@@ -354,3 +355,25 @@ my_paste.display()
 ```
 
 ---
+
+## Syntax Extensions
+
+Beyond standard Markdown and GFM, pastes support a few small syntax extensions.
+
+### Table of Contents Links — `[[#Heading]]`
+
+Write `[[#Heading Text]]` anywhere and it becomes a link that jumps to the matching heading. Matching is slug-based like GitHub, so casing and punctuation are ignored. For example: [[#Heading 2: Text Formatting]] jumps back to that section of the showcase above.
+
+### Superscript and Subscript
+
+Wrap text in carets for superscript — note there must be no space right inside the carets, so `^text^` works but `^ text ^` stays literal:
+
+-   Superscript: `x^2^` renders as x^2^, and it works for words too, like ^an ordinal number^.
+-   Subscript has no shorthand (a single `~` is reserved for strikethrough); use the `<sub>` HTML tag instead: `H<sub>2</sub>O` renders as H<sub>2</sub>O. `<sup>` works the same way.
+
+### Footnotes
+
+Reference a footnote with `[^id]` in the text and define it in a separate line at the bottom with `[^id]: Your text`. References and definitions link to each other in both directions — click a reference to jump to its note, and the ↩ backref to jump back[^1].
+
+[^1]: This is a footnote. It renders in a labelled section at the bottom of the paste, and the backref above returns to the exact sentence that referenced it.
+

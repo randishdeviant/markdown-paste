@@ -58,6 +58,19 @@
   overflow-x: auto;
 }
 
+/* GFM footnotes (section added by mdast-util-to-hast) */
+.prose :where(.footnotes) {
+  @apply mt-10 pt-6 border-t border-dark-border text-[0.875em] text-dark-text-secondary;
+}
+
+.prose :where(.footnotes) :where(li) {
+  @apply text-dark-text-secondary;
+}
+
+.prose :where(.data-footnote-backref) {
+  @apply ml-1 no-underline text-dark-text-muted hover:text-teal-400;
+}
+
 .language-label {
   @apply absolute top-2.5 left-4 text-[11px] font-mono text-dark-text-muted uppercase tracking-wider;
 }

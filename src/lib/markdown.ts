@@ -7,6 +7,7 @@ import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
 import rehypeSanitize, { defaultSchema } from 'rehype-sanitize';
 import type { BundledLanguage } from 'shiki';
+import { rehypeFootnoteIds, rehypeHeadingToc } from './rehype-postprocess';
 
 /**
  * GitHub-style sanitization schema.
@@ -56,7 +57,11 @@ function createProcessor(highlight: boolean) {
     .use(remarkGfm)
     .use(remarkRehype, { allowDangerousHtml: true })
     .use(rehypeRaw)
-    .use(rehypeSanitize, sanitizeSchema);
+    .use(rehypeSanitize, sanitizeSchema)
+    // After sanitize: generated heading ids and [[#...]] links must not be
+    // stripped, and footnote ids need their doubled clobber prefix repaired.
+    .use(rehypeFootnoteIds)
+    .use(rehypeHeadingToc);
 
   if (highlight) {
     processor.use(rehypeShiki, {
