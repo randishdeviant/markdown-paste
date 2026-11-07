@@ -2,6 +2,17 @@
 
 import { useEffect } from "react";
 
+type MermaidApi = {
+  initialize: (config: Record<string, unknown>) => void;
+  render: (id: string, code: string) => Promise<{ svg: string }>;
+};
+
+declare global {
+  interface Window {
+    mermaid?: MermaidApi;
+  }
+}
+
 /**
  * Client-side component that hydrates mermaid placeholders into SVG diagrams.
  * Loads mermaid.js from CDN and renders all .mermaid-placeholder elements.
@@ -23,12 +34,15 @@ export default function MermaidHydrator() {
 
       try {
         // Load script if not already loaded
-        if (!(window as any).mermaid) {
+        if (!window.mermaid) {
           await loadScript(mermaidUrl);
         }
 
         // Initialize mermaid with dark theme matching kanagawa-wave
-        const mermaid = (window as any).mermaid;
+        const mermaid = window.mermaid;
+        if (!mermaid) {
+          throw new Error("mermaid failed to initialize");
+        }
         mermaid.initialize({
           startOnLoad: false,
           theme: "dark",
