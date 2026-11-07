@@ -35,17 +35,23 @@
   overflow-wrap: break-word;
 }
 
-/* Excluded inside tables: cell content keeps its natural width so the
-   table scrolls horizontally like a code block instead of squishing it. */
-.prose :where(code):not(:where(pre *, table *)) {
+/* Inline code styling applies everywhere except inside code blocks —
+   including table cells. (Excluding `table *` here used to drop the whole
+   style, so typography's default kicked in and added backtick quotes plus
+   a different colour inside tables.) */
+.prose :where(code):not(:where(pre *)) {
   @apply bg-dark-surface text-teal-400 font-medium px-1.5 py-0.5 rounded-md text-[0.875em];
-  /* `anywhere` (not `break-word`) so long inline code also shrinks the
-     min-content width inside list items. */
-  overflow-wrap: anywhere;
   &::before,
   &::after {
     content: none !important;
   }
+}
+
+/* Only inline code outside tables shrinks its min-content width: `anywhere`
+   (not `break-word`) lets long inline code wrap inside list items, while
+   table cells keep their natural width so the table scrolls instead. */
+.prose :where(code):not(:where(pre *, table *)) {
+  overflow-wrap: anywhere;
 }
 
 /* Wide tables scroll horizontally inside their container instead of
