@@ -8,6 +8,7 @@ import rehypeRaw from 'rehype-raw';
 import rehypeSanitize, { defaultSchema } from 'rehype-sanitize';
 import type { BundledLanguage } from 'shiki';
 import { rehypeFootnoteIds, rehypeHeadingToc } from './rehype-postprocess';
+import { rehypeCallouts } from './rehype-callouts';
 import { rehypeMermaid } from './rehype-mermaid';
 
 /**
@@ -63,6 +64,7 @@ function createProcessor(highlight: boolean, mermaid: boolean) {
     // After sanitize: generated heading ids and [[#...]] links must not be
     // stripped, and footnote ids need their doubled clobber prefix repaired.
     .use(rehypeFootnoteIds)
+    .use(rehypeCallouts)
     .use(rehypeHeadingToc);
 
   if (mermaid) {

@@ -18,7 +18,7 @@ The core functionality includes server-side rendering of Markdown, a RESTful API
     -   Renders all standard Markdown elements, including tables (GFM).
     -   Beautiful syntax highlighting for dozens of languages via Shiki.
     -   Raw HTML is rendered with GitHub-style sanitization: inline elements like `<span>`, `<kbd>`, and `<details>` work, while scripts, styles, event handlers, and dangerous URLs are stripped.
-    -   Syntax extensions: `[[#Heading]]` table-of-contents links, `^superscript^` plus `<sub>`/`<sup>`, and footnotes `[^1]` with two-way navigation.
+    -   Syntax extensions: `[[#Heading]]` table-of-contents links, `^superscript^` plus `<sub>`/`<sup>`, footnotes `[^1]` with two-way navigation, and Obsidian-style callouts (`> [!note]`, collapsible via `-`/`+`).
     -   Custom-styled inline code and code blocks.
 -   **Public REST API:** A simple, unauthenticated API to create and retrieve pastes programmatically.
 -   **High-Performance Architecture:**
@@ -370,6 +370,19 @@ Wrap text in carets for superscript — note there must be no space right inside
 
 -   Superscript: `x^2^` renders as x^2^, and it works for words too, like ^an ordinal number^.
 -   Subscript has no shorthand (a single `~` is reserved for strikethrough); use the `<sub>` HTML tag instead: `H<sub>2</sub>O` renders as H<sub>2</sub>O. `<sup>` works the same way.
+
+### Callouts
+
+Borrowed from Obsidian: start a blockquote with `[!type]` and the whole blockquote becomes a styled callout with a coloured border, icon, and title. Supported types are `note`, `abstract`, `info`, `todo`, `tip`, `success`, `question`, `warning`, `failure`, `danger`, `bug`, `example`, and `quote`, plus Obsidian's aliases such as `summary`, `hint`, `caution`, and `error`.
+
+> [!note]
+> Callouts render with a coloured border, icon, and title.
+
+> [!tip] Custom title
+> Give a callout its own title by writing it after the marker.
+
+> [!warning]- Collapsed by default
+> Use `-` after the marker for a collapsible callout, or `+` to keep it open. Callouts can also be nested.
 
 ### Footnotes
 
