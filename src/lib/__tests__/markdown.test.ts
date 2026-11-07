@@ -281,3 +281,105 @@ describe("processMarkdown – superscript and subscript", { timeout: 30000 }, ()
   });
 });
 
+describe("processMarkdown – mermaid diagrams (hybrid: server placeholder, client render)", { timeout: 30000 }, () => {
+  it("outputs a mermaid-placeholder div with code for flowchart", async () => {
+    const html = await processMarkdown(
+      "```mermaid\nflowchart LR\n    A --> B\n```"
+    );
+
+    expect(html).toContain('class="mermaid-placeholder"');
+    expect(html).toContain('data-mermaid-code="flowchart LR');
+    expect(html).toContain("A --> B");
+    expect(html).toContain("mermaid-placeholder-code-inner");
+    expect(html).toContain("<pre");
+    expect(html).not.toContain("<svg");
+  });
+
+  it("outputs a mermaid-placeholder div with code for sequence diagram", async () => {
+    const html = await processMarkdown(
+      "```mermaid\nsequenceDiagram\n    Alice->>Bob: Hello\n```"
+    );
+
+    expect(html).toContain('class="mermaid-placeholder"');
+    expect(html).toContain('data-mermaid-code="sequenceDiagram');
+    expect(html).toContain("Alice");
+    expect(html).toContain("Bob");
+    expect(html).toContain("Hello");
+    expect(html).not.toContain("<svg");
+  });
+
+  it("outputs a mermaid-placeholder div with code for class diagram", async () => {
+    const html = await processMarkdown(
+      "```mermaid\nclassDiagram\n    Animal <|-- Duck\n```"
+    );
+
+    expect(html).toContain('class="mermaid-placeholder"');
+    expect(html).toContain('data-mermaid-code="classDiagram');
+    expect(html).toContain("Animal");
+    expect(html).toContain("Duck");
+    expect(html).not.toContain("<svg");
+  });
+
+  it("outputs placeholder even for invalid mermaid syntax (client handles error)", async () => {
+    const html = await processMarkdown(
+      "```mermaid\ninvalid syntax here\n```"
+    );
+
+    expect(html).toContain('class="mermaid-placeholder"');
+    expect(html).toContain('data-mermaid-code="invalid syntax here"');
+    expect(html).toContain("<pre");
+  });
+
+  it("does not run mermaid processor when no mermaid fence present", async () => {
+    const html = await processMarkdown(
+      "# Title\n\n```js\nconst x = 1;\n```\n\nRegular content."
+    );
+
+    expect(html).toContain("shiki");
+    expect(html).not.toContain('class="mermaid-placeholder"');
+  });
+
+  it("does not run mermaid processor for plain text without fences", async () => {
+    const html = await processMarkdown("Just plain text content.");
+
+    expect(html).not.toContain("shiki");
+    expect(html).not.toContain('class="mermaid-placeholder"');
+    expect(html).toContain("Just plain text content.");
+  });
+
+  it("outputs mermaid placeholder alongside other code blocks", async () => {
+    const html = await processMarkdown(
+      "```mermaid\nflowchart LR\n    A --> B\n```\n\n```js\nconst x = 1;\n```"
+    );
+
+    expect(html).toContain('class="mermaid-placeholder"');
+    expect(html).toContain("flowchart");
+    expect(html).toContain("shiki");
+    expect(html).toContain("const");
+  });
+
+  it("outputs mermaid placeholder inside blockquote", async () => {
+    const html = await processMarkdown(
+      "> ```mermaid\n> flowchart LR\n>     A --> B\n> ```"
+    );
+
+    expect(html).toContain('class="mermaid-placeholder"');
+    expect(html).toContain("flowchart");
+    expect(html).toContain("A --> B");
+  });
+
+  it("placeholder contains the full mermaid code for client-side rendering", async () => {
+    const html = await processMarkdown(
+      "```mermaid\nflowchart LR\n    A --> B\n```"
+    );
+
+    const placeholderMatch = html.match(/class="mermaid-placeholder"[\s\S]*?data-mermaid-code="([^"]+)"/);
+    expect(placeholderMatch).toBeTruthy();
+    if (placeholderMatch) {
+      const code = placeholderMatch[1];
+      expect(code).toContain("flowchart LR");
+      expect(code).toContain("A --> B");
+    }
+  });
+});
+

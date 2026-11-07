@@ -8,6 +8,7 @@ import rehypeRaw from 'rehype-raw';
 import rehypeSanitize, { defaultSchema } from 'rehype-sanitize';
 import type { BundledLanguage } from 'shiki';
 import { rehypeFootnoteIds, rehypeHeadingToc } from './rehype-postprocess';
+import { rehypeMermaid } from './rehype-mermaid';
 
 /**
  * GitHub-style sanitization schema.
@@ -50,8 +51,9 @@ const SHIKI_LANGS: BundledLanguage[] = [
 ];
 
 const HAS_FENCE = /(?:^|\n)\s*(?:>\s*)*(?:```|~~~)/;
+const HAS_MERMAID = /(?:^|\n)\s*(?:>\s*)*```\s*mermaid\b/;
 
-function createProcessor(highlight: boolean) {
+function createProcessor(highlight: boolean, mermaid: boolean) {
   const processor = unified()
     .use(remarkParse)
     .use(remarkGfm)
@@ -62,6 +64,10 @@ function createProcessor(highlight: boolean) {
     // stripped, and footnote ids need their doubled clobber prefix repaired.
     .use(rehypeFootnoteIds)
     .use(rehypeHeadingToc);
+
+  if (mermaid) {
+    processor.use(rehypeMermaid);
+  }
 
   if (highlight) {
     processor.use(rehypeShiki, {
@@ -77,14 +83,22 @@ function createProcessor(highlight: boolean) {
 
 // Processors are stateless between runs, so they can be reused across requests.
 const processors = {
-  highlight: createProcessor(true),
-  plain: createProcessor(false),
+  highlight: createProcessor(true, false),
+  highlightMermaid: createProcessor(true, true),
+  plain: createProcessor(false, false),
+  plainMermaid: createProcessor(false, true),
 };
 
 export async function processMarkdown(content: string): Promise<string> {
-  const processor = HAS_FENCE.test(content)
-    ? processors.highlight
-    : processors.plain;
+  const hasFence = HAS_FENCE.test(content);
+  const hasMermaid = HAS_MERMAID.test(content);
+
+  let processor;
+  if (hasFence) {
+    processor = hasMermaid ? processors.highlightMermaid : processors.highlight;
+  } else {
+    processor = hasMermaid ? processors.plainMermaid : processors.plain;
+  }
 
   const file = await processor.process(content);
 

@@ -140,3 +140,37 @@
 ::-webkit-scrollbar-thumb:hover {
   @apply bg-dark-text-muted;
 }
+
+/* Mermaid diagrams - client-side hydrated */
+.prose :where(.mermaid-placeholder) {
+  @apply max-w-full overflow-x-auto my-4;
+}
+
+.prose :where(.mermaid-placeholder-code) {
+  @apply bg-dark-surface border border-dark-border rounded-xl overflow-x-auto;
+}
+
+.prose :where(.mermaid-placeholder-code-inner) {
+  @apply text-teal-400 font-medium text-sm p-4 block;
+  overflow-wrap: anywhere;
+}
+
+.prose :where(.mermaid-placeholder[data-mermaid-rendered="true"]) {
+  @apply my-4;
+}
+
+.prose :where(.mermaid-placeholder[data-mermaid-rendered="true"] > svg) {
+  @apply max-w-full h-auto;
+  background-color: var(--color-dark-bg);
+}
+
+/* Loading state for mermaid placeholder */
+.prose :where(.mermaid-placeholder:not([data-mermaid-rendered="true"])) {
+  position: relative;
+}
+
+.prose :where(.mermaid-placeholder:not([data-mermaid-rendered="true"])::after) {
+  content: "Rendering diagram…";
+  @apply absolute top-2 right-2 text-xs text-dark-text-muted font-mono;
+  opacity: 0.7;
+}
